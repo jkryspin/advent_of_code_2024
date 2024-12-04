@@ -20,12 +20,12 @@ pub fn part_one(input: &str) -> Option<i32> {
 
 fn is_safe(levels: Vec<i32>) -> bool{
     let mut prev = None;
-    let mut isAsc = None;
+    let mut is_asc = None;
     for curr in levels.iter() {
         if prev.is_some() {
-            if isAsc.is_some(){
+            if is_asc.is_some(){
                 let is_curr_asc = curr - prev.unwrap() > 0;
-                if is_curr_asc != isAsc.unwrap() {
+                if is_curr_asc != is_asc.unwrap() {
                     return false;
                 }
             }
@@ -36,9 +36,9 @@ fn is_safe(levels: Vec<i32>) -> bool{
             }
 
             if curr - prev.unwrap() > 0{
-                isAsc = Some(true);
+                is_asc = Some(true);
             }else{
-                isAsc = Some(false);
+                is_asc = Some(false);
             }
         }
 
