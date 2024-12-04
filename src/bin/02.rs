@@ -6,7 +6,7 @@ pub fn part_one(input: &str) -> Option<i32> {
     let lines = input.lines().collect::<Vec<_>>();
     let mut count = 0;
     lines.iter().for_each(|l|{
-        let levels = l.split(" ").map(|i|{
+        let levels = l.split(' ').map(|i|{
             i32::from_str(i).unwrap()
         }).collect::<Vec<i32>>();
 
@@ -31,7 +31,7 @@ fn is_safe(levels: Vec<i32>) -> bool{
             }
 
             let diff = curr.abs_diff(prev.unwrap());
-            if  diff <1 || diff > 3{
+            if  !(1..=3).contains(&diff){
                 return false;
             }
 
@@ -51,7 +51,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     let lines = input.lines().collect::<Vec<_>>();
     let mut count = 0;
     lines.iter().for_each(|l|{
-        let levels = l.split(" ").map(|i|{
+        let levels = l.split(' ').map(|i|{
             i32::from_str(i).unwrap()
         }).collect::<Vec<i32>>();
 
