@@ -1,3 +1,5 @@
+use regex::Match;
+
 advent_of_code::solution!(3);
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -12,7 +14,7 @@ pub fn part_one(input: &str) -> Option<u32> {
                 let a = cap_iter.next().unwrap().unwrap().as_str().parse::<u32>().unwrap();
                 let b = cap_iter.next().unwrap().unwrap().as_str().parse::<u32>().unwrap();
 
-                count += (a * b);
+                count += a * b;
             }
      }
     Some(count)
@@ -20,51 +22,29 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<i32> {
     let mut count = 0;
-    let mut enabled_ranges = Vec::new();
-    let mut disabled_ranges = Vec::new();
-        let re = regex::Regex::new(r"do()").unwrap();
-        let matches = re.captures_iter(input);
-        matches.for_each(|m|{
-            // insert the end of the match into the hashmap as another vector item
-            enabled_ranges.push(m.get(0).unwrap().end());
-        });
+    let re = regex::Regex::new(r"mul\((?P<a>\d+),(?P<b>\d+)\)|(?P<do>do\(\))|(?P<dont>don't\(\))").unwrap();
+    let mut enabled = true;
 
-        let re2 = regex::Regex::new(r"don't()").unwrap();
-        let matches = re2.captures_iter(input);
-        matches.for_each(|m|{
-            disabled_ranges.push(m.get(0).unwrap().end());
-        });
-        enabled_ranges.sort();
-        disabled_ranges.sort();
+    for cap in re.captures_iter(input) {
+        match cap.name("do") {
+            Some(_) => enabled = true,
+            _ => {}
+        }
 
-        // get each group in this regex
-        let re = regex::Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
-        let matches = re.captures_iter(input);
-        for cap in matches {
-            let cap_iter = cap.iter();
-            let mut cap_iter = cap_iter;
-            let loc = cap_iter.next().unwrap().unwrap().start();
-            let a = cap_iter.next().unwrap().unwrap().as_str().parse::<i32>().unwrap();
-            let b = cap_iter.next().unwrap().unwrap().as_str().parse::<i32>().unwrap();
+        match cap.name("dont") {
+            Some(_) => enabled = false,
+            _ => {}
+        }
 
-            let mut enabled_range = 0;
-            for e in enabled_ranges.iter(){
-                if e < &loc{
-                    enabled_range = *e as i32;
+        if enabled {
+            match (cap.name("a"), cap.name("b")) {
+                (Some(a), Some(b)) => {
+                    count += a.as_str().parse::<i32>().unwrap() * b.as_str().parse::<i32>().unwrap();
                 }
-            }
-            let mut disabled_range = 0;
-            for d in disabled_ranges.iter(){
-                if d < &loc{
-                    disabled_range = *d as i32;
-                }
-            }
-            if enabled_range >= disabled_range{
-                // print enabled range and disabled range
-                // println!("enabled range: {}, disabled range: {}", enabled_range, disabled_range);
-                count += a * b;
+                _ => {}
             }
         }
+    }
     Some(count)
 }
 
