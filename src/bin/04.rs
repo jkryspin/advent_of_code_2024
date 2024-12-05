@@ -174,7 +174,6 @@ mod tests {
         let plot = Plot::create(input);
         let count = plot.count_ways(5, 0);
         assert_eq!(count, 1);
-        //
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(18));
     }
