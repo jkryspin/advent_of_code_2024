@@ -1,8 +1,18 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 
-pub struct Sorter{}
-impl Sorter {
-    pub fn topological_sort(&self, graph: &HashMap<u32, Vec<u32>>) -> Vec<u32> {
+pub struct Sorter<T> {
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T: Eq + Hash + Copy> Sorter<T> {
+    pub fn new() -> Self {
+        Self {
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    pub fn topological_sort(&self, graph: &HashMap<T, Vec<T>>) -> Vec<T> {
         let mut sorted = Vec::new();
         let mut visited = HashSet::new();
         let mut temp_mark = HashSet::new();
@@ -19,11 +29,11 @@ impl Sorter {
 
     fn visit(
         &self,
-        node: u32,
-        graph: &HashMap<u32, Vec<u32>>,
-        visited: &mut HashSet<u32>,
-        temp_mark: &mut HashSet<u32>,
-        sorted: &mut Vec<u32>,
+        node: T,
+        graph: &HashMap<T, Vec<T>>,
+        visited: &mut HashSet<T>,
+        temp_mark: &mut HashSet<T>,
+        sorted: &mut Vec<T>,
     ) {
         if temp_mark.contains(&node) {
             panic!("Graph has a cycle");

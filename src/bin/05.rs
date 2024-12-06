@@ -1,5 +1,5 @@
-use std::collections::{HashMap};
 use advent_of_code::day05sorter::Sorter;
+use std::collections::HashMap;
 
 advent_of_code::solution!(5);
 
@@ -18,7 +18,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     for page_producer in unordered_pages {
         let rules = printer.filter_rules(&page_producer.pages);
         let graph = build_graph(&rules);
-        let sorter = Sorter {};
+        let sorter = Sorter::new();
         let sorted_pages = sorter.topological_sort(&graph);
         sum += sorted_pages[sorted_pages.len() / 2];
     }
@@ -29,7 +29,10 @@ pub fn part_two(input: &str) -> Option<u32> {
 fn build_graph(rules: &[&PageOrderingRule]) -> HashMap<u32, Vec<u32>> {
     let mut graph = HashMap::new();
     for rule in rules {
-        graph.entry(rule.first).or_insert_with(Vec::new).push(rule.second);
+        graph
+            .entry(rule.first)
+            .or_insert_with(Vec::new)
+            .push(rule.second);
     }
     graph
 }
@@ -45,15 +48,21 @@ impl Printer {
         let (rules, pages) = input.split_once("\n\n").unwrap();
         let page_ordering_rules = rules.lines().map(PageOrderingRule::from).collect();
         let pages_to_produce = pages.lines().map(PageProducer::from).collect();
-        Self { page_ordering_rules, pages_to_produce }
+        Self {
+            page_ordering_rules,
+            pages_to_produce,
+        }
     }
 
     fn get_ordered_pages(&self) -> (Vec<&PageProducer>, Vec<&PageProducer>) {
-        self.pages_to_produce.iter().partition(|&p| p.is_ordered(&self.page_ordering_rules))
+        self.pages_to_produce
+            .iter()
+            .partition(|&p| p.is_ordered(&self.page_ordering_rules))
     }
 
     fn filter_rules(&self, pages: &[u32]) -> Vec<&PageOrderingRule> {
-        self.page_ordering_rules.iter()
+        self.page_ordering_rules
+            .iter()
             .filter(|rule| pages.contains(&rule.first) && pages.contains(&rule.second))
             .collect()
     }
@@ -68,7 +77,10 @@ struct PageOrderingRule {
 impl From<&str> for PageOrderingRule {
     fn from(line: &str) -> Self {
         let (first, second) = line.split_once("|").unwrap();
-        Self { first: first.parse().unwrap(), second: second.parse().unwrap() }
+        Self {
+            first: first.parse().unwrap(),
+            second: second.parse().unwrap(),
+        }
     }
 }
 
@@ -79,7 +91,9 @@ struct PageProducer {
 
 impl From<&str> for PageProducer {
     fn from(line: &str) -> Self {
-        Self { pages: line.split(",").map(|p| p.parse().unwrap()).collect() }
+        Self {
+            pages: line.split(",").map(|p| p.parse().unwrap()).collect(),
+        }
     }
 }
 
