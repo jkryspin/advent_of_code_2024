@@ -57,21 +57,23 @@ impl Grid {
         let mut x = x;
         let mut y = y;
         let mut visited_with_dir: HashMap<(usize, usize), HashSet<Direction>> = HashMap::new();
+        let mut recently_collided = false;
         loop {
-            if self.visited[y][x] {
+
+            self.visited[y][x] = true;
+            if recently_collided {
                 if let Some(dir) = visited_with_dir.get(&(x, y)) {
                     if dir.contains(&direction) {
                         return true;
                     }
                 }
-            }
-            self.visited[y][x] = true;
 
-            //insert current position and dir, with dir being a hashset of dirs
-            visited_with_dir
-                .entry((x, y))
-                .or_insert_with(|| HashSet::with_capacity(4))
-                .insert(direction);
+                //insert current position and dir, with dir being a hashset of dirs
+                visited_with_dir
+                    .entry((x, y))
+                    .or_insert_with(|| HashSet::with_capacity(4))
+                    .insert(direction);
+            }
 
             let prev = (x, y);
             match direction {
@@ -104,9 +106,11 @@ impl Grid {
             if y < 0 || y >= self.grid.len() || x < 0 || x >= self.grid[y].len() {
                 return false;
             }
+            recently_collided = false;
 
             if self.grid[y][x] == '#' {
                 (x, y) = prev;
+                recently_collided = true;
                 direction = Grid::get_next_dir(direction);
             }
         }
