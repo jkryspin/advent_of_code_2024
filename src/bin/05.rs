@@ -1,46 +1,37 @@
-use std::collections::{HashMap, HashSet};
-use advent_of_code::day05sorter;
+use std::collections::{HashMap};
+use advent_of_code::day05sorter::Sorter;
 
 advent_of_code::solution!(5);
 
 pub fn part_one(input: &str) -> Option<u32> {
     let printer = Printer::new(input);
     let (ordered_pages, _) = printer.get_ordered_pages();
-
-    let middle_pages = ordered_pages
-        .iter()
-        .map(|page_producer| page_producer.get_middle_page())
-        .collect::<Vec<_>>();
-
-    Some(middle_pages.iter().sum())
+    let middle_pages_sum: u32 = ordered_pages.iter().map(|p| p.get_middle_page()).sum();
+    Some(middle_pages_sum)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
     let printer = Printer::new(input);
     let (_, unordered_pages) = printer.get_ordered_pages();
-
     let mut sum = 0;
-    unordered_pages.iter().for_each(|page_producer| {
-        let mut rules = vec![];
-        let unique_pages = page_producer.pages.iter().collect::<HashSet<_>>();
-        for rule in printer.page_ordering_rules.iter() {
-            if unique_pages.contains(&rule.first) && unique_pages.contains(&rule.second) {
-                rules.push(rule)
-            }
-        }
 
-        let mut graph = HashMap::new();
-        for rule in rules.iter() {
-            graph.entry(rule.first).or_insert(vec![]).push(rule.second);
-        }
-
-        let sorter = day05sorter::Sorter {};
+    for page_producer in unordered_pages {
+        let rules = printer.filter_rules(&page_producer.pages);
+        let graph = build_graph(&rules);
+        let sorter = Sorter {};
         let sorted_pages = sorter.topological_sort(&graph);
-
         sum += sorted_pages[sorted_pages.len() / 2];
-    });
+    }
 
     Some(sum)
+}
+
+fn build_graph(rules: &[&PageOrderingRule]) -> HashMap<u32, Vec<u32>> {
+    let mut graph = HashMap::new();
+    for rule in rules {
+        graph.entry(rule.first).or_insert_with(Vec::new).push(rule.second);
+    }
+    graph
 }
 
 #[derive(Debug)]
@@ -50,67 +41,21 @@ struct Printer {
 }
 
 impl Printer {
-    fn get_ordered_pages(&self) -> (Vec<&PageProducer>, Vec<&PageProducer>) {
-        let mut ordered_pages = Vec::new();
-        let mut unordered_pages = Vec::new();
-        for pageProducer in &self.pages_to_produce {
-            let mut rules = vec![];
-            let unique_pages = pageProducer.pages.iter().collect::<HashSet<_>>();
-            for rule in self.page_ordering_rules.iter() {
-                if unique_pages.contains(&rule.first) && unique_pages.contains(&rule.second) {
-                    rules.push(rule)
-                }
-            }
-
-            let mut good_rule = true;
-            for rule in rules.iter() {
-                // println!("{:?}", rule);
-                if pageProducer
-                    .pages
-                    .iter()
-                    .position(|page| *page == rule.first)
-                    .unwrap()
-                    > pageProducer
-                        .pages
-                        .iter()
-                        .position(|page| *page == rule.second)
-                        .unwrap()
-                {
-                    // println!("Not in order");
-                    good_rule = false;
-                    break;
-                }
-            }
-            if good_rule {
-                ordered_pages.push(pageProducer);
-            } else {
-                unordered_pages.push(pageProducer);
-            }
-        }
-        (ordered_pages, unordered_pages)
-    }
     fn new(input: &str) -> Self {
-        let (page_ordering_rules_s, pages_to_produce_s) = input.split_once("\n\n").unwrap();
-        let page_ordering_rules = page_ordering_rules_s
-            .lines()
-            .map(|line| {
-                let (first, second) = line.split_once("|").unwrap();
-                PageOrderingRule {
-                    first: first.parse().unwrap(),
-                    second: second.parse().unwrap(),
-                }
-            })
-            .collect();
-        let pages_to_produce = pages_to_produce_s
-            .lines()
-            .map(|line| PageProducer {
-                pages: line.split(",").map(|page| page.parse().unwrap()).collect(),
-            })
-            .collect();
-        Self {
-            page_ordering_rules,
-            pages_to_produce,
-        }
+        let (rules, pages) = input.split_once("\n\n").unwrap();
+        let page_ordering_rules = rules.lines().map(PageOrderingRule::from).collect();
+        let pages_to_produce = pages.lines().map(PageProducer::from).collect();
+        Self { page_ordering_rules, pages_to_produce }
+    }
+
+    fn get_ordered_pages(&self) -> (Vec<&PageProducer>, Vec<&PageProducer>) {
+        self.pages_to_produce.iter().partition(|&p| p.is_ordered(&self.page_ordering_rules))
+    }
+
+    fn filter_rules(&self, pages: &[u32]) -> Vec<&PageOrderingRule> {
+        self.page_ordering_rules.iter()
+            .filter(|rule| pages.contains(&rule.first) && pages.contains(&rule.second))
+            .collect()
     }
 }
 
@@ -120,18 +65,40 @@ struct PageOrderingRule {
     second: u32,
 }
 
+impl From<&str> for PageOrderingRule {
+    fn from(line: &str) -> Self {
+        let (first, second) = line.split_once("|").unwrap();
+        Self { first: first.parse().unwrap(), second: second.parse().unwrap() }
+    }
+}
+
 #[derive(Debug)]
 struct PageProducer {
     pages: Vec<u32>,
 }
 
-impl PageProducer {
-    fn get_middle_page(&self) -> u32 {
-        let pages = self.pages.clone();
-        pages[pages.len() / 2]
+impl From<&str> for PageProducer {
+    fn from(line: &str) -> Self {
+        Self { pages: line.split(",").map(|p| p.parse().unwrap()).collect() }
     }
 }
 
+impl PageProducer {
+    fn get_middle_page(&self) -> u32 {
+        self.pages[self.pages.len() / 2]
+    }
+
+    fn is_ordered(&self, rules: &[PageOrderingRule]) -> bool {
+        rules.iter().all(|rule| {
+            let first_pos = self.pages.iter().position(|&p| p == rule.first);
+            let second_pos = self.pages.iter().position(|&p| p == rule.second);
+            match (first_pos, second_pos) {
+                (Some(f), Some(s)) => f < s,
+                _ => true,
+            }
+        })
+    }
+}
 
 #[cfg(test)]
 mod tests {
