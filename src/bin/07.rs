@@ -32,8 +32,10 @@ impl From<&str> for Calibration {
     fn from(s: &str) -> Self {
         let (left, right) = s.split_once(": ").unwrap();
         let test_value = left.parse().unwrap();
-        let mut parts = right.split(" ");
-        let operands = parts.map(|s| s.parse().unwrap()).collect();
+        let operands = right
+            .split_whitespace()
+            .map(|s| s.parse().unwrap())
+            .collect();
 
         Self {
             test_value,
@@ -49,6 +51,9 @@ impl Calibration {
         for o in iter {
             let results = calculated_results.drain(..).collect::<Vec<u64>>();
             for r in results {
+                if r > self.test_value {
+                    continue;
+                }
                 calculated_results.push(o + r);
                 calculated_results.push(o * r);
                 if use_concat_operator {
