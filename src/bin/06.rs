@@ -59,7 +59,6 @@ impl Grid {
         let mut visited_with_dir: HashMap<(usize, usize), HashSet<Direction>> = HashMap::new();
         let mut recently_collided = false;
         loop {
-
             self.visited[y][x] = true;
             if recently_collided {
                 if let Some(dir) = visited_with_dir.get(&(x, y)) {
@@ -102,10 +101,7 @@ impl Grid {
                     x += 1;
                 }
             }
-            // if out of grid bounds, break
-            if y < 0 || y >= self.grid.len() || x < 0 || x >= self.grid[y].len() {
-                return false;
-            }
+
             recently_collided = false;
 
             if self.grid[y][x] == '#' {
