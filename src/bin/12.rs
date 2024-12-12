@@ -11,7 +11,7 @@ fn solve(input: &str, part: bool) -> u32 {
     let regions = get_regions(&grid);
     let mut total = 0;
 
-    for ((cell, _start_x, _start_y), region) in regions.iter() {
+    for ((_cell, _start_x, _start_y), region) in regions.iter() {
         let mut perimeter = 0;
         for (x, y) in region.iter() {
             let mut sides = 4;
@@ -23,13 +23,11 @@ fn solve(input: &str, part: bool) -> u32 {
             }
             perimeter += sides;
         }
-        println!("Region: {:?}", region);
         let region_i32 = region.iter().map(|(x, y)| (*x as i32, *y as i32)).collect::<Vec<_>>();
         let sides = calculate_region_sides(&region_i32);
         if part {
             total += region.len() as u32 * perimeter as u32;
         } else {
-            println!("Region of {} plants with price {} * {}", cell, region.len(), sides);
             total += region.len() as u32 * sides as u32;
         }
     }
@@ -70,49 +68,57 @@ fn get_regions(grid: &Vec<Vec<char>>) -> HashMap<(char, usize, usize), Vec<(u32,
 }
 
 fn calculate_region_sides(region: &Vec<(i32, i32)>) -> u32 {
-    println!("Region: {:?}", region);
-    let mut perimeter = HashSet::new();
-    for (x, y) in region.iter() {
-        for (nx, ny) in find_neighbors_no_bounds(*x, *y) {
-            if !region.contains(&(nx, ny)) {
-                perimeter.insert((nx, ny));
-            }
-        }
-    }
-    // println!("Perimeter: {:?}", perimeter);
-    let mut print_grid = vec![vec!['.'; 10]; 10];
-    for (x, y) in perimeter.iter() {
-        if *x >= 0 && *y >= 0 && (*x as usize) < 10 && (*y as usize) < 10 {
-            print_grid[*y as usize][*x as usize] = '#';
-        }
-    }
-
-    // Print the grid
-    for row in print_grid {
-        // println!("{}", row.iter().collect::<String>());
-    }
-    // print perimeter in grid, with . for empty, # for full
-    // get number of connected perimeter cells
-    let mut connected = 0;
-    while !perimeter.is_empty() {
-        let mut stack = vec![perimeter.iter().next().unwrap().clone()];
-        perimeter.remove(&stack[0]);
-        while let Some((x, y)) = stack.pop() {
-            for (nx, ny) in find_neighbors_no_bounds(x, y) {
-                if perimeter.contains(&(nx, ny)) {
-                    perimeter.remove(&(nx, ny));
-                    stack.push((nx, ny));
-                }
-            }
-        }
-        connected += 1;
-    }
-    connected
-
+    region.iter().map(|&(x, y)| is_corner(x, y, region)).sum()
 }
-fn find_neighbors_no_bounds(x: i32, y: i32) -> Vec<(i32, i32)> {
-    vec![(x - 1, y), (x, y - 1), (x + 1, y), (x, y + 1)]
+
+
+fn is_corner(x: i32, y: i32, region: &Vec<(i32, i32)>) -> u32{
+    let dirs = vec![Direction::Up, Direction::Right, Direction::Down, Direction::Left];
+    let mut corners = 0;
+    for dir in dirs.iter() {
+        // if the dir has a block, it cant be a corner
+        let corner = match dir {
+            Direction::Up => !region.contains(&(x, y - 1)),
+            Direction::Down => !region.contains(&(x, y + 1)),
+            Direction::Left => !region.contains(&(x - 1, y)),
+            Direction::Right => !region.contains(&(x + 1, y)),
+        };
+        if !corner {
+            continue;
+        }
+
+        // if the rotation clockwise has a block, it cant be a corner
+        let corner1 = match dir {
+            Direction::Up => !region.contains(&(x + 1, y)),
+            Direction::Down => !region.contains(&(x - 1, y)),
+            Direction::Left => !region.contains(&(x, y - 1)),
+            Direction::Right => !region.contains(&(x, y + 1)),
+        };
+
+
+        // but if the diagonal has a block it can be an interior corner still
+        let corner2 = match dir {
+            Direction::Up => region.contains(&(x + 1, y - 1)),
+            Direction::Down => region.contains(&(x - 1, y + 1)),
+            Direction::Left => region.contains(&(x - 1, y - 1)),
+            Direction::Right => region.contains(&(x + 1, y + 1)),
+        };
+
+        if corner1 || corner2 {
+            corners += 1;
+        }
+    }
+    corners
 }
+
+#[derive(Debug)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 
 fn find_neighbors(x: usize, y: usize, grid: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
     let mut neighbors = Vec::new();
