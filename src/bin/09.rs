@@ -1,79 +1,64 @@
 advent_of_code::solution!(9);
 
 pub fn part_one(input: &str) -> Option<i128> {
-    // 2333133121414131402
-    // 00...111...2...333.44.5555.6666.777.888899
-    let mut i = 0;
+    let mut output = parse_input(input);
+    process_output_part_one(&mut output);
+    Some(calculate_sum(&output))
+}
+
+pub fn part_two(input: &str) -> Option<i128> {
+    let mut output = parse_input(input);
+    process_output_part_two(&mut output);
+    print_output(&output);
+    Some(calculate_sum(&output))
+}
+
+fn parse_input(input: &str) -> Vec<i128> {
     let mut output = Vec::new();
-    for c in input.chars().map(|c|c.to_digit(10).unwrap()) {
+    let mut i = 0;
+    for c in input.chars().map(|c| c.to_digit(10).unwrap()) {
         if i % 2 == 0 {
-            // c == length of block
             for _ in 0..c {
-                output.push(i/2);
+                output.push(i / 2);
             }
         } else {
-            // c == length of free space
             for _ in 0..c {
                 output.push(-1);
             }
         }
         i += 1;
     }
+    output
+}
+
+fn process_output_part_one(output: &mut Vec<i128>) {
     let mut i = 0;
-    // get last element not equal to .
     while i < output.len() {
-        // println!("{}", output.join(""));
         if output[i] == -1 {
             if let Some(pos) = output.iter_mut().rposition(|x| *x != -1) {
                 if pos < i {
-                    println!("we are done");
-                    // remove all remaining . from output
-                    output = output.into_iter().filter(|x| *x != -1).collect();
-
+                    output.retain(|&x| x != -1);
                     break;
                 }
-               output[i]= output.remove(pos);
+                output[i] = output.remove(pos);
             } else {
                 panic!("no more values");
             }
         }
         i += 1;
     }
-
-    let mut sum = 0;
-    output.into_iter().enumerate().for_each(|(i, c)| {
-        sum += i as i128 * c
-    });
-
-    Some(sum)
 }
 
-pub fn part_two(input: &str) -> Option<i128> {
-    let mut i = 0;
-    let mut output = Vec::new();
-    for c in input.chars().map(|c|c.to_digit(10).unwrap()) {
-        if i % 2 == 0 {
-            // c == length of block
-            for _ in 0..c {
-                output.push(i/2);
-            }
-        } else {
-            // c == length of free space
-            for _ in 0..c {
-                output.push(-1);
-            }
-        }
-        i += 1;
-    }
+fn process_output_part_two(output: &mut Vec<i128>) {
     let mut i = output.len() - 1;
     while i > 0 {
-        print_output(&output);
+        print_output(output);
         if output[i] == -1 {
-            i-=1;
+            i -= 1;
             continue;
         }
 
-        let block_len = output.iter().rev().skip(output.len() -i).take_while(|&&x| x == output[i]).count() +1;
+        let block_len = output.iter().rev().skip(output.len() - i).take_while(|&&x| x == output[i]).count() + 1;
 
         let mut j = 0;
         while j < i {
@@ -89,27 +74,24 @@ pub fn part_two(input: &str) -> Option<i128> {
                     break;
                 }
             }
-            j+=1;
+            j += 1;
         }
         i = i.saturating_sub(block_len)
     }
-
-    print_output(&output);
-
-    let mut sum = 0;
-    output.into_iter().enumerate().filter(|(_, x)|*x!=-1).for_each(|(i, c)| {
-        sum += i as i128 * c
-    });
-
-    Some(sum)
 }
+
+fn calculate_sum(output: &Vec<i128>) -> i128 {
+    output.iter().enumerate().filter(|(_, &x)| x != -1).map(|(i, &c)| i as i128 * c).sum()
+}
+
 fn print_output(output: &Vec<i128>) {
     return;
     println!("{}", output.iter().map(|x| {
         if *x == -1 {
-            return ".".to_string();
+            ".".to_string()
+        } else {
+            x.to_string()
         }
-        x.to_string()
     }).collect::<Vec<String>>().join(""));
 }
 
