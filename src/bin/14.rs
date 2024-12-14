@@ -58,13 +58,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
             assert!(robot.y >= 0);
             grid[robot.y as usize][robot.x as usize] += 1;
         }
-        // for row in &grid {
-        //     println!("{}", row.iter().map(|s|s.to_string()).collect::<String>());
-        // }
-        // check if triangle exists with top 2 sides with length 12
-
         // check if triangle exists with top 2 sides with length at least 12
-        let mut triangle_exists = false;
         for y in 0..height {
             for x in 0..width {
                 if grid[y as usize][x as usize] > 0 {
@@ -117,7 +111,6 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
 
     let mut quadrant_counts = [0; 4];
     for robot in &robots {
-        // if width is 11, middle is 6
         let middle_x = width / 2;
         let middle_y = height / 2;
         let quadrant = if robot.x < middle_x {
