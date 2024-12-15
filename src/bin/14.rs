@@ -77,7 +77,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
                         if next_y >= height {
                             break;
                         }
-                        if grid[y as usize + i as usize][next_left as usize] > 0 && grid[y as usize + i as usize][next_right as usize] > 0 {
+                        if grid[y + i as usize][next_left as usize] > 0 && grid[y as usize + i as usize][next_right as usize] > 0 {
                             count += 1;
                         } else {
                             break;
