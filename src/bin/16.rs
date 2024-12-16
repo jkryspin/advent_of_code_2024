@@ -1,32 +1,44 @@
-use std::collections::{BinaryHeap, HashMap};
 use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 advent_of_code::solution!(16);
 
-fn shortest_path_with_cost(grid: &Vec<Vec<char>>, start: (usize, usize, Direction, Direction), end: (usize, usize)) -> Option<(usize, Vec<(usize, usize)>)> {
+fn shortest_path_with_cost(
+    grid: &Vec<Vec<char>>,
+    start: (usize, usize, Direction, Direction),
+    end: (usize, usize),
+) -> Option<(usize, usize)> {
     let mut dist: HashMap<(usize, usize, Direction, Direction), usize> = HashMap::new();
     let mut heap = BinaryHeap::new();
-    let mut predecessors: HashMap<(usize, usize, Direction, Direction), (usize, usize, Direction, Direction)> = HashMap::new();
 
     // Initialize the distance to the start node to 0
     dist.insert(start, 0);
-    heap.push(State { cost: 0, position: start });
+    heap.push(State {
+        cost: 0,
+        position: start,
+        positions_visited:HashMap::new(),
+    });
 
     // Directions for moving in the grid (up, down, left, right)
     let directions = [(0, 1), (1, 0), (0, -1), (-1, 0)];
+    let mut all_found_positions = HashSet::new();
 
-    while let Some(State { cost, position }) = heap.pop() {
-        // If we reached the end, reconstruct the path and return the cost and path
+    while let Some(State { cost, position, positions_visited }) = heap.pop() {
+        // If we reached the end, reconstruct all paths and return the cost and number of visited nodes
         if position.0 == end.0 && position.1 == end.1 {
-            let mut path = vec![(position.0, position.1)];
-            let mut current = position;
-            while let Some(&pred) = predecessors.get(&current) {
-                path.push((pred.0, pred.1));
-                current = pred;
+            // bfs through positions_visited
+            let mut queue = VecDeque::new();
+            queue.push_back((position.0, position.1));
+            let mut visited = HashSet::new();
+            visited.insert((position.0, position.1));
+            while let Some((x, y)) = queue.pop_front() {
+                all_found_positions.insert((x, y));
+                for (nx, ny) in positions_visited.get(&(x, y)).unwrap_or(&HashSet::new()) {
+                    if visited.insert((*nx, *ny)) {
+                        queue.push_back((*nx, *ny));
+                    }
+                }
             }
-            path.reverse();
-            return Some((cost, path));
         }
-
         // If the cost is greater than the recorded distance, skip this node
         if cost > *dist.get(&position).unwrap_or(&usize::MAX) {
             continue;
@@ -46,7 +58,6 @@ fn shortest_path_with_cost(grid: &Vec<Vec<char>>, start: (usize, usize, Directio
                 if grid[new_position.0][new_position.1] == '#' {
                     continue;
                 }
-                // d is current direction
                 let next_cost = if Direction::from(direction) != position.2 {
                     cost + 1001
                 } else {
@@ -54,17 +65,26 @@ fn shortest_path_with_cost(grid: &Vec<Vec<char>>, start: (usize, usize, Directio
                 };
 
                 // If the new cost is less than the recorded distance, update the distance and push to the heap
-                if next_cost < *dist.get(&new_position).unwrap_or(&usize::MAX) {
+                if next_cost <= *dist.get(&new_position).unwrap_or(&usize::MAX) {
                     dist.insert(new_position, next_cost);
-                    heap.push(State { cost: next_cost, position: new_position });
-                    predecessors.insert(new_position, position);
+                    let mut clone = positions_visited.clone();
+                    clone
+                        .entry((new_position.0, new_position.1))
+                        .or_insert(HashSet::new())
+                        .insert((position.0, position.1));
+
+                    heap.push(State {
+                        cost: next_cost,
+                        position: new_position,
+                        positions_visited: clone,
+                    });
                 }
             }
         }
     }
+    // print the grid with positions as O
 
-    // If we reach here, there is no path to the end
-    None
+    return Some((0usize, all_found_positions.len()));
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -82,10 +102,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     let start = (start.0, start.1, Direction::Right, Direction::Right);
 
-    let asn = shortest_path_with_cost(&grid, start, end).map(|(cost, path)| (1000 + cost as u32, path));
+    let asn =
+        shortest_path_with_cost(&grid, start, end).map(|(cost, path)| (1000 + cost as u32, path));
 
     return asn.map(|(cost, path)| cost);
-
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
@@ -103,18 +123,18 @@ pub fn part_two(input: &str) -> Option<u32> {
 
     let start = (start.0, start.1, Direction::Right, Direction::Right);
 
-    let (cost, positions)= shortest_path_with_cost(&grid, start, end).map(|(cost, path)| (1000 + cost as u32, path)).unwrap();
-    println!("{:?}", positions);
-    Some(positions.len() as u32)
+    let (_, len) = shortest_path_with_cost(&grid, start, end).unwrap();
+    Some(len as u32)
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 struct State {
     cost: usize,
     position: (usize, usize, Direction, Direction), // (x, y, current direction, previous direction)
+    positions_visited:HashMap<(usize,usize),HashSet<(usize,usize)>>
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd, Debug)]
 enum Direction {
     Up,
     Down,
@@ -141,7 +161,9 @@ impl Ord for State {
         // Notice that the we flip the ordering on costs.
         // In case of a tie we compare positions - this step is necessary
         // to make implementations of `PartialEq` and `Ord` consistent.
-        other.cost.cmp(&self.cost)
+        other
+            .cost
+            .cmp(&self.cost)
             .then_with(|| self.position.cmp(&other.position))
     }
 }
@@ -159,7 +181,6 @@ struct Edge {
     cost: usize,
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -172,7 +193,8 @@ mod tests {
 
     #[test]
     fn test_part_one_a() {
-        let result = part_one(r#"#################
+        let result = part_one(
+            r#"#################
 #...#...#...#..E#
 #.#.#.#.#.#.#.#.#
 #.#.#.#...#...#.#
@@ -189,7 +211,8 @@ mod tests {
 #.#.#.#########.#
 #S#.............#
 #################
-"#);
+"#,
+        );
         assert_eq!(result, Some(11048));
     }
 
@@ -197,5 +220,30 @@ mod tests {
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(45));
+    }
+
+    #[test]
+    fn test_part_two_a() {
+        let result = part_two(
+            r#"#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################
+"#,
+        );
+        assert_eq!(result, Some(64));
     }
 }

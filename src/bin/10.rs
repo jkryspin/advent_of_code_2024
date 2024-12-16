@@ -5,7 +5,11 @@ advent_of_code::solution!(10);
 pub fn part_one(input: &str) -> Option<u32> {
     let grid = input
         .lines()
-        .map(|line| line.chars().map(|c| c.to_digit(10).unwrap() ).collect::<Vec<_>>())
+        .map(|line| {
+            line.chars()
+                .map(|c| c.to_digit(10).unwrap())
+                .collect::<Vec<_>>()
+        })
         .collect::<Vec<_>>();
 
     // get x and y coordinates of all posistions = 0
@@ -66,47 +70,51 @@ fn get_valid_neighbours(x: usize, y: usize, grid: &Vec<Vec<u32>>) -> Vec<(usize,
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-        let grid = input
-            .lines()
-            .map(|line| line.chars().map(|c| c.to_digit(10).unwrap() ).collect::<Vec<_>>())
-            .collect::<Vec<_>>();
+    let grid = input
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|c| c.to_digit(10).unwrap())
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
 
-        let mut positions = Vec::new();
-        for (y, row) in grid.iter().enumerate() {
-            for (x, &cell) in row.iter().enumerate() {
-                if cell == 0 {
-                    positions.push((x, y));
-                }
+    let mut positions = Vec::new();
+    for (y, row) in grid.iter().enumerate() {
+        for (x, &cell) in row.iter().enumerate() {
+            if cell == 0 {
+                positions.push((x, y));
             }
         }
+    }
 
-        let mut count = 0;
+    let mut count = 0;
     let mut unique_paths = HashSet::new();
 
     for (x, y) in positions {
-            let mut queue = Vec::new();
-            queue.push((x, y, vec![(x, y)]));
-            while !queue.is_empty() {
-                let (x, y, path) = queue.remove(0);
-                if grid[y][x] == 9 {
-                    count += 1;
-                    unique_paths.insert(path);
+        let mut queue = Vec::new();
+        queue.push((x, y, vec![(x, y)]));
+        while !queue.is_empty() {
+            let (x, y, path) = queue.remove(0);
+            if grid[y][x] == 9 {
+                count += 1;
+                unique_paths.insert(path);
+                continue;
+            }
+            for (nx, ny) in get_valid_neighbours(x, y, &grid) {
+                if !is_one_higher(x, y, nx, ny, &grid) {
                     continue;
                 }
-                for (nx, ny) in get_valid_neighbours(x, y, &grid) {
-                    if !is_one_higher(x, y, nx, ny, &grid) {
-                        continue;
-                    }
-                    if !path.contains(&(nx, ny)) {
-                        let mut new_path = path.clone();
-                        new_path.push((nx, ny));
-                        queue.push((nx, ny, new_path));
-                    }
+                if !path.contains(&(nx, ny)) {
+                    let mut new_path = path.clone();
+                    new_path.push((nx, ny));
+                    queue.push((nx, ny, new_path));
                 }
             }
         }
+    }
 
-        Some(unique_paths.len() as u32)
+    Some(unique_paths.len() as u32)
 }
 
 #[cfg(test)]

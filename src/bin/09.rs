@@ -58,7 +58,13 @@ fn process_output_part_two(output: &mut Vec<i128>) {
             continue;
         }
 
-        let block_len = output.iter().rev().skip(output.len() - i).take_while(|&&x| x == output[i]).count() + 1;
+        let block_len = output
+            .iter()
+            .rev()
+            .skip(output.len() - i)
+            .take_while(|&&x| x == output[i])
+            .count()
+            + 1;
 
         let mut j = 0;
         while j < i {
@@ -81,18 +87,30 @@ fn process_output_part_two(output: &mut Vec<i128>) {
 }
 
 fn calculate_sum(output: &Vec<i128>) -> i128 {
-    output.iter().enumerate().filter(|(_, &x)| x != -1).map(|(i, &c)| i as i128 * c).sum()
+    output
+        .iter()
+        .enumerate()
+        .filter(|(_, &x)| x != -1)
+        .map(|(i, &c)| i as i128 * c)
+        .sum()
 }
 
 fn print_output(output: &Vec<i128>) {
     return;
-    println!("{}", output.iter().map(|x| {
-        if *x == -1 {
-            ".".to_string()
-        } else {
-            x.to_string()
-        }
-    }).collect::<Vec<String>>().join(""));
+    println!(
+        "{}",
+        output
+            .iter()
+            .map(|x| {
+                if *x == -1 {
+                    ".".to_string()
+                } else {
+                    x.to_string()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("")
+    );
 }
 
 #[cfg(test)]

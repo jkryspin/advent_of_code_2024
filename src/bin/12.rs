@@ -7,7 +7,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 fn solve(input: &str, part: bool) -> u32 {
-    let grid = input.lines().map(|l| l.chars().collect::<Vec<_>>()).collect::<Vec<_>>();
+    let grid = input
+        .lines()
+        .map(|l| l.chars().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
     let regions = get_regions(&grid);
     let mut total = 0;
 
@@ -23,7 +26,10 @@ fn solve(input: &str, part: bool) -> u32 {
             }
             perimeter += sides;
         }
-        let region_i32 = region.iter().map(|(x, y)| (*x as i32, *y as i32)).collect::<Vec<_>>();
+        let region_i32 = region
+            .iter()
+            .map(|(x, y)| (*x as i32, *y as i32))
+            .collect::<Vec<_>>();
         let sides = calculate_region_sides(&region_i32);
         if part {
             total += region.len() as u32 * perimeter as u32;
@@ -59,7 +65,10 @@ fn get_regions(grid: &Vec<Vec<char>>) -> HashMap<(char, usize, usize), Vec<(u32,
                 }
             }
             for (x_r, y_r) in region.iter() {
-                regions.entry((*cell, x, y)).or_insert(Vec::new()).push((*x_r, *y_r));
+                regions
+                    .entry((*cell, x, y))
+                    .or_insert(Vec::new())
+                    .push((*x_r, *y_r));
             }
         }
     }
@@ -71,9 +80,13 @@ fn calculate_region_sides(region: &Vec<(i32, i32)>) -> u32 {
     region.iter().map(|&(x, y)| is_corner(x, y, region)).sum()
 }
 
-
-fn is_corner(x: i32, y: i32, region: &Vec<(i32, i32)>) -> u32{
-    let dirs = vec![Direction::Up, Direction::Right, Direction::Down, Direction::Left];
+fn is_corner(x: i32, y: i32, region: &Vec<(i32, i32)>) -> u32 {
+    let dirs = vec![
+        Direction::Up,
+        Direction::Right,
+        Direction::Down,
+        Direction::Left,
+    ];
     let mut corners = 0;
     for dir in dirs.iter() {
         // if the dir has a block, it cant be a corner
@@ -94,7 +107,6 @@ fn is_corner(x: i32, y: i32, region: &Vec<(i32, i32)>) -> u32{
             Direction::Left => !region.contains(&(x, y - 1)),
             Direction::Right => !region.contains(&(x, y + 1)),
         };
-
 
         // but if the diagonal has a block it can be an interior corner still
         let corner2 = match dir {
@@ -118,7 +130,6 @@ enum Direction {
     Left,
     Right,
 }
-
 
 fn find_neighbors(x: usize, y: usize, grid: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
     let mut neighbors = Vec::new();

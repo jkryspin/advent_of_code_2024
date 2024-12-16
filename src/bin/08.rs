@@ -10,7 +10,10 @@ pub fn part_one(input: &str) -> Option<u32> {
     input.lines().enumerate().for_each(|(y, line)| {
         line.chars().enumerate().for_each(|(x, c)| {
             if c != '.' {
-                positions_by_char.entry(c).or_insert(HashSet::new()).insert((x as i32, y as i32));
+                positions_by_char
+                    .entry(c)
+                    .or_insert(HashSet::new())
+                    .insert((x as i32, y as i32));
             }
         });
     });
@@ -47,7 +50,10 @@ pub fn part_two(input: &str) -> Option<u32> {
     input.lines().enumerate().for_each(|(y, line)| {
         line.chars().enumerate().for_each(|(x, c)| {
             if c != '.' {
-                positions_by_char.entry(c).or_insert(HashSet::new()).insert((x as i32, y as i32));
+                positions_by_char
+                    .entry(c)
+                    .or_insert(HashSet::new())
+                    .insert((x as i32, y as i32));
             }
         });
     });
@@ -83,11 +89,10 @@ pub fn part_two(input: &str) -> Option<u32> {
     }
 
     positions_by_char.values().for_each(|v| {
-        v.iter().for_each(|(x,y)|{
+        v.iter().for_each(|(x, y)| {
             antinodes.insert((*x, *y));
         })
     });
-
 
     Some(antinodes.len() as u32)
 }
@@ -104,7 +109,8 @@ mod tests {
 
     #[test]
     fn test_part_one_a() {
-        let result = part_one(r#"..........
+        let result = part_one(
+            r#"..........
 ..........
 ..........
 ....a.....
@@ -113,7 +119,8 @@ mod tests {
 ..........
 ..........
 ..........
-.........."#);
+.........."#,
+        );
         assert_eq!(result, Some(2));
     }
 

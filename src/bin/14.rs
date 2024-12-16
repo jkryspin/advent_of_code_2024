@@ -7,7 +7,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 #[derive(Debug)]
-struct Robot{
+struct Robot {
     x: i32,
     y: i32,
     vx: i32,
@@ -15,14 +15,14 @@ struct Robot{
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-   solve(input, false)
+    solve(input, false)
 }
 
-fn solve(input: &str, part_one:bool) -> Option<u32> {
+fn solve(input: &str, part_one: bool) -> Option<u32> {
     let re = Regex::new(r"(-?\d+),(-?\d+) v=(-?\d+),(-?\d+)").unwrap();
     let mut robots = vec![];
-    let width =101;
-    let height =103;
+    let width = 101;
+    let height = 103;
 
     for line in input.lines() {
         let caps = re.captures(line).unwrap();
@@ -32,7 +32,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
         let vy = caps[4].parse().unwrap();
         robots.push(Robot { x, y, vx, vy });
     }
-    let end = if part_one {100} else {usize::MAX};
+    let end = if part_one { 100 } else { usize::MAX };
     for i in 0..end {
         for robot in &mut robots {
             robot.x += robot.vx;
@@ -77,7 +77,9 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
                         if next_y >= height {
                             break;
                         }
-                        if grid[y + i as usize][next_left as usize] > 0 && grid[y as usize + i as usize][next_right as usize] > 0 {
+                        if grid[y + i as usize][next_left as usize] > 0
+                            && grid[y as usize + i as usize][next_right as usize] > 0
+                        {
                             count += 1;
                         } else {
                             break;
@@ -85,7 +87,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
                     }
                     if count >= 6 {
                         for row in &grid {
-                            println!("{}", row.iter().map(|s|s.to_string()).collect::<String>());
+                            println!("{}", row.iter().map(|s| s.to_string()).collect::<String>());
                         }
                         return Some(i as u32 + 1);
                     }
@@ -105,9 +107,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
         }
         assert!(robot.x >= 0);
         assert!(robot.y >= 0);
-
     }
-
 
     let mut quadrant_counts = [0; 4];
     for robot in &robots {
@@ -118,7 +118,7 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
                 Some(0)
             } else if robot.y > middle_y {
                 Some(2)
-            }else {
+            } else {
                 None
             }
         } else if robot.x > middle_x {
@@ -126,10 +126,10 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
                 Some(1)
             } else if robot.y > middle_y {
                 Some(3)
-            }else {
+            } else {
                 None
             }
-        }else{
+        } else {
             None
         };
         match quadrant {
@@ -138,7 +138,6 @@ fn solve(input: &str, part_one:bool) -> Option<u32> {
             }
             None => {}
         }
-
     }
     Some(quadrant_counts.iter().product())
 }
