@@ -22,6 +22,7 @@ pub fn part_two(input: &str) -> Option<usize> {
     for (dx,dy, c) in moves {
         sol.move_robot(dx,dy);
     }
+    sol.print();
 
     Some(sol.grid.iter().enumerate().map(|(y, row)| row.iter().enumerate().filter(|(x, c)| **c == '[').map(|(x, _)| (y * 100 + x)).sum::<usize>()).sum::<usize>())
 }
