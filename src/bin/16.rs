@@ -19,7 +19,7 @@ fn shortest_path_with_cost(
     });
 
     // Directions for moving in the grid (up, down, left, right)
-    let directions = [(0, 1), (1, 0), (0, -1), (-1, 0)];
+    let directions = [(0, 1), (-1, 0), (0, -1), (1, 0)];
     let mut all_found_positions = HashSet::new();
 
     while let Some(State { cost, position, positions_visited }) = heap.pop() {
@@ -46,6 +46,10 @@ fn shortest_path_with_cost(
 
         // Explore the neighbors
         for direction in &directions {
+            // skip if direction is opposite of current direction
+            if Direction::from(direction) == position.3.opposite() {
+                continue;
+            }
             let new_position = (
                 (position.0 as isize + direction.0) as usize,
                 (position.1 as isize + direction.1) as usize,
@@ -54,7 +58,8 @@ fn shortest_path_with_cost(
             );
 
             // Check if the new position is within the grid bounds
-            if new_position.0 < grid.len() && new_position.1 < grid[0].len() {
+            if new_position.1 < grid.len() && new_position.1 < grid[0].len()
+            {
                 if grid[new_position.0][new_position.1] == '#' {
                     continue;
                 }
@@ -67,6 +72,9 @@ fn shortest_path_with_cost(
                 // If the new cost is less than the recorded distance, update the distance and push to the heap
                 if next_cost <= *dist.get(&new_position).unwrap_or(&usize::MAX) {
                     dist.insert(new_position, next_cost);
+                    if new_position.0 == start.0 && new_position.1 == start.1 {
+                        continue;
+                    }
                     let mut clone = positions_visited.clone();
                     clone
                         .entry((new_position.0, new_position.1))
@@ -82,7 +90,16 @@ fn shortest_path_with_cost(
             }
         }
     }
-    // print the grid with positions as O
+    let mut g2 = grid.clone();
+    // set positions in grid with O
+    for (x, y) in &all_found_positions {
+        g2[*x][*y] = 'O';
+    }
+    // print grid
+    for row in g2.iter(){
+        println!("{}", row.iter().collect::<String>());
+    }
+
 
     return Some((0usize, all_found_positions.len()));
 }
@@ -140,6 +157,17 @@ enum Direction {
     Down,
     Left,
     Right,
+}
+
+impl Direction{
+    fn opposite(&self) -> Self {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
 }
 
 impl From<&(isize, isize)> for Direction {
