@@ -110,6 +110,8 @@ pub fn part_one(input: &str) -> Option<u32> {
     let asn =
         shortest_path_with_cost(&grid, start, end, true).map(|(cost)| (1000 + cost as u32));
 
+    //add 9 to 7 unique values
+
     asn
 }
 
