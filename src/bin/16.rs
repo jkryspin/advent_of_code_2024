@@ -33,7 +33,6 @@ fn shortest_path_with_cost(
             }
             if expected_len.is_none() {
                 expected_len = Some(positions_visited.len());
-                total_positions = positions_visited.iter().map(|(x,y)|(*x,*y)).collect();
             }
             if positions_visited.len() == expected_len.unwrap() {
                 // add to total_positions
@@ -94,25 +93,24 @@ fn shortest_path_with_cost(
     Some(total_positions.len())
 }
 
+fn find_char(grid: &Vec<Vec<char>,>, c: char) -> (usize, usize) {
+    grid.iter()
+        .enumerate()
+        .find_map(|(y, row)| row.iter().position(|&c2| c2 == c).map(|x| (x, y)))
+        .unwrap()
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let grid: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
-    let start = grid
-        .iter()
-        .enumerate()
-        .find_map(|(y, row)| row.iter().position(|&c| c == 'S').map(|x| (x, y)))
-        .unwrap();
-    let end = grid
-        .iter()
-        .enumerate()
-        .find_map(|(y, row)| row.iter().position(|&c| c == 'E').map(|x| (x, y)))
-        .unwrap();
+    let start = find_char(&grid, 'S');
+    let end = find_char(&grid, 'E');
 
     let start = (start.0, start.1, Direction::Right, Direction::Right);
 
     let asn =
         shortest_path_with_cost(&grid, start, end, true).map(|(cost)| (1000 + cost as u32));
 
-    asn.map(|(cost)| cost)
+    asn
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
@@ -191,12 +189,6 @@ impl PartialOrd for State {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
-}
-
-#[derive(Debug)]
-struct Edge {
-    node: (usize, usize),
-    cost: usize,
 }
 
 #[cfg(test)]
