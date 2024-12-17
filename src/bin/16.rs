@@ -6,7 +6,8 @@ fn shortest_path_with_cost(
     grid: &Vec<Vec<char>>,
     start: (usize, usize, Direction, Direction),
     end: (usize, usize),
-) -> Option<(usize, usize)> {
+    part_one:bool
+) -> Option<usize> {
     let mut dist: HashMap<(usize, usize, Direction, Direction), usize> = HashMap::new();
     let mut heap = BinaryHeap::new();
 
@@ -15,28 +16,28 @@ fn shortest_path_with_cost(
     heap.push(State {
         cost: 0,
         position: start,
-        positions_visited:HashMap::new(),
+        positions_visited: HashSet::new(),
     });
+
 
     // Directions for moving in the grid (up, down, left, right)
     let directions = [(0, 1), (-1, 0), (0, -1), (1, 0)];
-    let mut all_found_positions = HashSet::new();
-
+    let mut expected_len = None;
+    let mut total_positions = HashSet::new();
     while let Some(State { cost, position, positions_visited }) = heap.pop() {
         // If we reached the end, reconstruct all paths and return the cost and number of visited nodes
         if position.0 == end.0 && position.1 == end.1 {
             // bfs through positions_visited
-            let mut queue = VecDeque::new();
-            queue.push_back((position.0, position.1));
-            let mut visited = HashSet::new();
-            visited.insert((position.0, position.1));
-            while let Some((x, y)) = queue.pop_front() {
-                all_found_positions.insert((x, y));
-                for (nx, ny) in positions_visited.get(&(x, y)).unwrap_or(&HashSet::new()) {
-                    if visited.insert((*nx, *ny)) {
-                        queue.push_back((*nx, *ny));
-                    }
-                }
+            if part_one {
+                return Some(cost);
+            }
+            if expected_len.is_none() {
+                expected_len = Some(positions_visited.len());
+                total_positions = positions_visited.iter().map(|(x,y)|(*x,*y)).collect();
+            }
+            if positions_visited.len() == expected_len.unwrap() {
+                // add to total_positions
+                total_positions.extend(positions_visited.iter().map(|(x,y)|(*x,*y)));
             }
         }
         // If the cost is greater than the recorded distance, skip this node
@@ -75,11 +76,9 @@ fn shortest_path_with_cost(
                     if new_position.0 == start.0 && new_position.1 == start.1 {
                         continue;
                     }
+
                     let mut clone = positions_visited.clone();
-                    clone
-                        .entry((new_position.0, new_position.1))
-                        .or_insert(HashSet::new())
-                        .insert((position.0, position.1));
+                    clone.insert((new_position.0, new_position.1));
 
                     heap.push(State {
                         cost: next_cost,
@@ -90,18 +89,9 @@ fn shortest_path_with_cost(
             }
         }
     }
-    let mut g2 = grid.clone();
-    // set positions in grid with O
-    for (x, y) in &all_found_positions {
-        g2[*x][*y] = 'O';
-    }
-    // print grid
-    for row in g2.iter(){
-        println!("{}", row.iter().collect::<String>());
-    }
-
-
-    return Some((0usize, all_found_positions.len()));
+    total_positions.insert((start.0, start.1));
+    total_positions.insert((end.0, end.1));
+    Some(total_positions.len())
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -120,9 +110,9 @@ pub fn part_one(input: &str) -> Option<u32> {
     let start = (start.0, start.1, Direction::Right, Direction::Right);
 
     let asn =
-        shortest_path_with_cost(&grid, start, end).map(|(cost, path)| (1000 + cost as u32, path));
+        shortest_path_with_cost(&grid, start, end, true).map(|(cost)| (1000 + cost as u32));
 
-    return asn.map(|(cost, path)| cost);
+    asn.map(|(cost)| cost)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
@@ -140,7 +130,7 @@ pub fn part_two(input: &str) -> Option<u32> {
 
     let start = (start.0, start.1, Direction::Right, Direction::Right);
 
-    let (_, len) = shortest_path_with_cost(&grid, start, end).unwrap();
+    let len = shortest_path_with_cost(&grid, start, end, false).unwrap();
     Some(len as u32)
 }
 
@@ -148,7 +138,7 @@ pub fn part_two(input: &str) -> Option<u32> {
 struct State {
     cost: usize,
     position: (usize, usize, Direction, Direction), // (x, y, current direction, previous direction)
-    positions_visited:HashMap<(usize,usize),HashSet<(usize,usize)>>
+    positions_visited: HashSet<(usize, usize)>,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd, Debug)]
