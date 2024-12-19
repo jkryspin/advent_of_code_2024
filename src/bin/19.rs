@@ -1,15 +1,18 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use cached::proc_macro::cached;
 
 advent_of_code::solution!(19);
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<u64> {
     let solver = Solver::from(input.to_string());
-    println!("{:?}", solver);
-    Some(solver.solve())
+    Some(solver.solve(true))
+
+
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let solver = Solver::from(input.to_string());
+    Some(solver.solve(false))
 }
 
 #[derive(Debug)]
@@ -19,34 +22,38 @@ struct Solver{
 }
 
 impl Solver{
-    fn solve(&self) -> u32{
+    fn solve(&self, part_one:bool) -> u64{
         let mut count = 0;
         for towel in &self.towels{
-            if self.is_possible(towel){
-                count += 1;
+            if part_one{
+                if ways(self.towel_patterns.clone(), towel.clone()) > 0{
+                    count += 1;
+                }
+            }else {
+                count += ways(self.towel_patterns.clone(), towel.clone());
             }
         }
-
         count
     }
 
-    fn is_possible(&self, towel: &str) -> bool{
-        let mut q = VecDeque::new();
-        q.push_back(towel.to_string());
-        while let Some(current) = q.pop_front(){
-            if current.is_empty(){
-                return true;
-            }
-            for pattern in &self.towel_patterns{
-                if current.starts_with(pattern){
-                    let new_towel = current.replace(pattern, "");
-                    q.push_back(new_towel);
-                }
-            }
-        }
-        false
-    }
+
 }
+
+#[cached]
+fn ways(towel_patterns: Vec<String>,towel: String) -> u64{
+    if towel.is_empty(){
+        return 1;
+    }
+    let mut count:u64 = 0;
+    for pattern in towel_patterns.iter(){
+        if towel.starts_with(pattern){
+            let new_towel = towel.replacen(pattern, "", 1);
+            count += ways(towel_patterns.clone(), new_towel);
+        }
+    }
+    count
+}
+
 
 impl From<String> for Solver{
     fn from(value: String) -> Self {
@@ -73,6 +80,7 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(16));
+        // 1555825069 too low
     }
 }
