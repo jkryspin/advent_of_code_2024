@@ -1,4 +1,3 @@
-use std::collections::{HashMap, VecDeque};
 use cached::proc_macro::cached;
 
 advent_of_code::solution!(19);
@@ -6,8 +5,6 @@ advent_of_code::solution!(19);
 pub fn part_one(input: &str) -> Option<u64> {
     let solver = Solver::from(input.to_string());
     Some(solver.solve(true))
-
-
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
