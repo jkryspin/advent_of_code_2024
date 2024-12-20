@@ -4,20 +4,17 @@ advent_of_code::solution!(20);
 
 pub fn part_one(input: &str) -> Option<u32> {
     let solver = Solver::from(input);
-    Solver::print(&solver.grid);
     let start = solver.grid
         .iter()
         .enumerate()
         .find_map(|(y, row)| row.iter().position(|&c| c == 'S').map(|x| (x, y)))
         .unwrap();
-    println!("{:?}", start);
     let end = solver.grid
         .iter()
         .enumerate()
         .find_map(|(y, row)| row.iter().position(|&c| c == 'E').map(|x| (x, y)))
         .unwrap();
-    println!("{:?}", end);
-    let (steps, costs) = bfs(&solver.grid, start, end).unwrap();
+    let costs = bfs(&solver.grid, start, end).unwrap();
     // loop through x,y of costs
     let mut moves_saved = vec![];
     for y in 0..costs.len() {
@@ -30,14 +27,14 @@ pub fn part_one(input: &str) -> Option<u32> {
     // remove duplicates from moves_saved
     moves_saved.sort();
     moves_saved.dedup();
-    let costs_calculated = moves_saved.iter().map(|(start, end, _)| {
+    let costs_calculated = moves_saved.iter().map(|(start, end, steps)| {
         let starting_cost = costs[start.1][start.0];
         let ending_cost = costs[end.1][end.0];
         if starting_cost > ending_cost {
             return 0;
         }
-        let steps_saved = ending_cost - starting_cost - 2;
-        steps_saved
+        let steps_saved = ending_cost as i32 - starting_cost as i32 - *steps as i32;
+        steps_saved as u32
     }).collect::<Vec<u32>>();
 
     // count greater than or equal to 100
@@ -47,20 +44,17 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<u32> {
     let solver = Solver::from(input);
-    Solver::print(&solver.grid);
     let start = solver.grid
         .iter()
         .enumerate()
         .find_map(|(y, row)| row.iter().position(|&c| c == 'S').map(|x| (x, y)))
         .unwrap();
-    println!("{:?}", start);
     let end = solver.grid
         .iter()
         .enumerate()
         .find_map(|(y, row)| row.iter().position(|&c| c == 'E').map(|x| (x, y)))
         .unwrap();
-    println!("{:?}", end);
-    let (steps, costs) = bfs(&solver.grid, start, end).unwrap();
+    let costs = bfs(&solver.grid, start, end).unwrap();
     let mut moves_saved = vec![];
     for y in 0..costs.len() {
         for x in 0..costs[0].len() {
@@ -130,7 +124,7 @@ fn bfs_with_cap(grid: &Vec<Vec<u32>>, start: (usize, usize), max_len: usize) -> 
     Some(moves_saved)
 }
 
-fn bfs(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> Option<(u32, Vec<Vec<u32>>)> {
+fn bfs(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> Option<Vec<Vec<u32>>> {
     let mut queue = VecDeque::new();
     let mut visited = HashSet::new();
     queue.push_back((start, 1));
@@ -141,7 +135,7 @@ fn bfs(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> Opt
         let (x, y) = pos;
         costs[y][x] = steps;
         if pos == end {
-            return Some((steps, costs));
+            return Some(costs);
         }
         for (dx, dy) in &[(0, 1), (1, 0), (0, -1), (-1, 0)] {
             let (nx, ny) = (x as i32 + dx, y as i32 + dy);
@@ -172,17 +166,7 @@ impl From<&str> for Solver {
         Self { grid }
     }
 }
-impl Solver{
-    // make print generic
-    fn print(grid: &Vec<Vec<char>>){
-        for row in grid {
-            for c in row {
-                print!("{}", c);
-            }
-            println!();
-        }
-    }
-}
+
 #[cfg(test)]
 mod tests {
     use super::*;
